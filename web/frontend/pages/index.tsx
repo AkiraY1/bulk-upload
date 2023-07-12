@@ -7,15 +7,76 @@ import {
   Stack,
   Link,
   Text,
+  LegacyCard,
 } from "@shopify/polaris";
 import { TitleBar } from "@shopify/app-bridge-react";
 import { useTranslation, Trans } from "react-i18next";
+import React from 'react';
 
 import { trophyImage } from "../assets";
 
 import { ProductsCard } from "../components";
 
-export default function HomePage() {
+// Import statements for drop zone
+import { DropZone, LegacyStack, Thumbnail } from "@shopify/polaris";
+import { NoteMinor } from "@shopify/polaris-icons";
+import { useState, useCallback } from "react";
+
+//Drop Zone
+export default function DropZoneFunc() {
+  const { t } = useTranslation();
+
+  const [files, setFiles] = useState<File[]>([]);
+  const handleDropZoneDrop = useCallback(
+    (_dropFiles: File[], acceptedFiles: File[], _rejectedFiles: File[]) =>
+    setFiles((files) => [...files, ...acceptedFiles]),
+    [],
+  );
+  const validImageTypes = ['image/gif', 'image/jpeg', 'image/png'];
+  const fileUpload = !files.length && (
+    <DropZone.FileUpload actionHint="Accepts .gif, .jpg, and .png" />
+  )
+
+  const uploadedFiles = files.length > 0 && (
+    <LegacyStack vertical>
+      {files.map((file, index) => (
+        <LegacyStack alignment="center" key={index}>
+          <Thumbnail size="small" alt={file.name} source={
+            validImageTypes.includes(file.type)
+            ? window.URL.createObjectURL(file)
+            : NoteMinor
+          }
+          />
+          <div>
+            {file.name}{' '}
+            <Text variant="bodySm" as="p">
+              {file.size} bytes
+            </Text>
+          </div>
+        </LegacyStack>
+      ))}
+    </LegacyStack>
+  );
+
+  return (
+    <Page narrowWidth>
+      <TitleBar title={t("HomePage.title")} />
+      <Layout>
+        <Layout.Section>
+          <LegacyCard>
+            <DropZone onDrop={handleDropZoneDrop} variableHeight>
+              {uploadedFiles}
+              {fileUpload}
+            </DropZone>
+          </LegacyCard>
+        </Layout.Section>
+      </Layout>
+    </Page>
+  );
+}
+
+//Default home page
+/* export function HomePage() {
   const { t } = useTranslation();
   return (
     <Page narrowWidth>
@@ -87,4 +148,4 @@ export default function HomePage() {
       </Layout>
     </Page>
   );
-}
+} */
