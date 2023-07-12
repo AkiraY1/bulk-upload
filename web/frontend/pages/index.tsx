@@ -8,6 +8,8 @@ import {
   Link,
   Text,
   LegacyCard,
+  Banner,
+  List,
 } from "@shopify/polaris";
 import { TitleBar } from "@shopify/app-bridge-react";
 import { useTranslation, Trans } from "react-i18next";
@@ -26,27 +28,28 @@ import { useState, useCallback } from "react";
 export default function DropZoneFunc() {
   const { t } = useTranslation();
 
-  const [files, setFiles] = useState<File[]>([]);
+  const [file, setFile] = useState<File>();
+  const [rejectedFiles, setRejectedFiles] = useState<File[]>([]);
+  const hasError = rejectedFiles.length > 0;
+
   const handleDropZoneDrop = useCallback(
-    (_dropFiles: File[], acceptedFiles: File[], _rejectedFiles: File[]) =>
-    setFiles((files) => [...files, ...acceptedFiles]),
+    (_dropFiles: File[], acceptedFiles: File[], rejectedFiles: File[]) =>
+    {
+      setFile(acceptedFiles[0]);
+      setRejectedFiles(rejectedFiles);
+    },
     [],
   );
-  const validImageTypes = ['image/gif', 'image/jpeg', 'image/png'];
-  const fileUpload = !files.length && (
-    <DropZone.FileUpload actionHint="Accepts .gif, .jpg, and .png" />
-  )
+  const fileUpload = !file && <DropZone.FileUpload actionHint="File type must be .csv" />
 
-  const uploadedFiles = files.length > 0 && (
+  function removeFile() {
+    setFile(undefined);
+  }
+
+  const uploadedFiles = file && (
     <LegacyStack vertical>
-      {files.map((file, index) => (
-        <LegacyStack alignment="center" key={index}>
-          <Thumbnail size="small" alt={file.name} source={
-            validImageTypes.includes(file.type)
-            ? window.URL.createObjectURL(file)
-            : NoteMinor
-          }
-          />
+        <LegacyStack alignment="center">
+          <Thumbnail size="small" alt={file.name} source={ NoteMinor } />
           <div>
             {file.name}{' '}
             <Text variant="bodySm" as="p">
@@ -54,8 +57,22 @@ export default function DropZoneFunc() {
             </Text>
           </div>
         </LegacyStack>
-      ))}
     </LegacyStack>
+  );
+
+  const errorMessage = hasError && (
+    <Banner
+      title="The following files couldn't be uploaded:"
+      status="critical"
+    >
+      <List type="bullet">
+        {rejectedFiles.map((file, index) => (
+          <List.Item key={index}>
+            {`${file.name} is not supported. File type must be .csv.`}
+          </List.Item>
+        ))}
+      </List>
+    </Banner>
   );
 
   return (
@@ -63,8 +80,17 @@ export default function DropZoneFunc() {
       <TitleBar title={t("HomePage.title")} />
       <Layout>
         <Layout.Section>
-          <LegacyCard>
-            <DropZone onDrop={handleDropZoneDrop} variableHeight>
+          {errorMessage}
+        </Layout.Section>
+        <Layout.Section>
+          <LegacyCard sectioned title="Upload CSV file" actions={[{ content: "Remove File", onAction: removeFile }]}>
+            <DropZone 
+              accept={"text/csv"}
+              onDrop={handleDropZoneDrop}
+              allowMultiple={false}
+              errorOverlayText="File type must be .csv"
+              dropOnPage={true}
+            variableHeight>
               {uploadedFiles}
               {fileUpload}
             </DropZone>
