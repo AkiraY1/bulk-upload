@@ -3,8 +3,6 @@
 import {
   Page,
   Layout,
-  Image,
-  Link,
   Text,
   LegacyCard,
   Banner,
@@ -14,6 +12,8 @@ import {
   IndexTable,
   EmptySearchResult,
   VerticalStack,
+  Modal,
+  TextContainer,
 } from "@shopify/polaris";
 import { useNavigate } from "@shopify/app-bridge-react";
 import { createSearchParams } from "react-router-dom";
@@ -36,6 +36,7 @@ export default function HomePage() {
   const [products, setProducts] = useState([]);
   const [errors, setErrors] = useState([]);
   const hasDataErrors = errors.length > 0;
+  const [loading, setLoading] = useState(false);
 
   //////////////////////////// FUNCTIONS: DROP ZONE & PARSE FILE ////////////////////////////
 
@@ -61,6 +62,7 @@ export default function HomePage() {
 
   const handleOnClick = useCallback(
     async () => {
+      setLoading(true);
       const response = await fetch(
         "/api/csvparse",
         {
@@ -163,6 +165,13 @@ export default function HomePage() {
       </VerticalStack>
     </Banner>
   );
+
+  const handleModalClose = useCallback(() => setLoading(true), []); //forces modal open so user know page is still loading
+
+  const loadingModal = (
+    <Modal title="Loading (this might take a few minutes...)" open={loading} onClose={handleModalClose} loading={true} >
+    </Modal>
+  );
   
   //////////////////////////// RETURN: DISPLAY PARSED DATA ////////////////////////////
   if (displayTable) {
@@ -233,6 +242,7 @@ export default function HomePage() {
             </LegacyCard>
           </Layout.Section>
         </Layout>
+        {loadingModal}
       </Page>
     );
   }
