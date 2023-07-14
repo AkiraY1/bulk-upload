@@ -14,6 +14,7 @@
   "dependencies": {
     "@shopify/app": "3.47.5",
     "@shopify/cli": "3.47.5",
+    "graphql": "^15.8.0",
     "papaparse": "^5.4.1"
   },
   "author": "akiray",

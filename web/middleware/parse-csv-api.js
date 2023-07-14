@@ -12,6 +12,7 @@ export default function applyApiEndpoints(app) {
             const response = await getCsvJson(req, res);
             res.status(200).send(response);
         } catch(error) {
+            console.log("didnt work");
             console.error(error);
             res.status(500).send(error.message);
         }

@@ -153,20 +153,21 @@ export default function HomePage() {
 
   const rowMarkup = products.map(
     (
-      {row, product, productid, metafield, prevMetafieldValue, newMetafieldValue},
+      {productTitle, productId, metafieldNamespace, metafieldKey, metafieldCurrentValue, metafieldNewValue},
       index,
     ) => (
-      <IndexTable.Row id={row} key={index} position={index}>
+      <IndexTable.Row id={index.toString()} key={index} position={index}>
           <IndexTable.Cell>
               <Text variant="bodyMd" fontWeight="bold" as="span">
-                  {row}
+                  {index+1}
               </Text>
           </IndexTable.Cell>
-          <IndexTable.Cell>{product}</IndexTable.Cell>
-          <IndexTable.Cell>{productid}</IndexTable.Cell>
-          <IndexTable.Cell>{metafield}</IndexTable.Cell>
-          <IndexTable.Cell>{prevMetafieldValue}</IndexTable.Cell>
-          <IndexTable.Cell>{newMetafieldValue}</IndexTable.Cell>
+          <IndexTable.Cell>{productTitle}</IndexTable.Cell>
+          <IndexTable.Cell>{productId}</IndexTable.Cell>
+          <IndexTable.Cell>{metafieldNamespace}</IndexTable.Cell>
+          <IndexTable.Cell>{metafieldKey}</IndexTable.Cell>
+          <IndexTable.Cell>{metafieldCurrentValue}</IndexTable.Cell>
+          <IndexTable.Cell>{metafieldNewValue}</IndexTable.Cell>
       </IndexTable.Row>
     ),
   );
@@ -181,10 +182,11 @@ export default function HomePage() {
             itemCount={products.length} 
             emptyState={emptyStateMarkup}
             headings={[
-                {title: 'Row'},
+                {title: 'Item'},
                 {title: 'Product'},
                 {title: 'Product ID'},
-                {title: 'Metafield'},
+                {title: 'Metafield Namespace'},
+                {title: 'Metafield Key'},
                 {title: 'Current Value'},
                 {title: 'New Value'},
             ]}
