@@ -1,3 +1,11 @@
+//////////////////////////// USEFUL LINKS ////////////////////////////
+/*
+https://shopify.dev/docs/apps/getting-started
+https://polaris.shopify.com/components
+https://shopify.dev/docs/api/admin-graphql
+https://developer.mozilla.org/en-US/
+https://shopify.dev/docs/apps/deployment/web
+*/
 //////////////////////////// IMPORT STATEMENTS ////////////////////////////
 
 import {
@@ -13,18 +21,16 @@ import {
   EmptySearchResult,
   VerticalStack,
   Modal,
-  TextContainer,
 } from "@shopify/polaris";
 import { useNavigate } from "@shopify/app-bridge-react";
-import { createSearchParams } from "react-router-dom";
-import { useTranslation, Trans } from "react-i18next";
+import { useTranslation } from "react-i18next";
 import React from 'react';
 
 // Import statements for drop zone
 import { DropZone, LegacyStack, Thumbnail } from "@shopify/polaris";
 import { NoteMinor } from "@shopify/polaris-icons";
 import { useState, useCallback } from "react";
-import { useAuthenticatedFetch, useAppQuery } from "../hooks";
+import { useAuthenticatedFetch } from "../hooks";
 
 //////////////////////////// HOMEPAGE FUNCTION ////////////////////////////
 
@@ -155,6 +161,8 @@ export default function HomePage() {
     ),
   );
 
+  //////////////////////////// FUNCTIONS: REVIEW CHANGES ////////////////////////////
+
   const issuesMessage = hasDataErrors && (
     <Banner title="The following issues were found:" status="critical">
       <VerticalStack gap="1">
@@ -165,6 +173,7 @@ export default function HomePage() {
         </List>
         <Text variant="headingSm" as="h6" fontWeight="regular">
           Edit your CSV with the correct values and re-upload to fix these issues.
+          You can ignore these issues and "Apply Changes" if you want. However, the items with issues will not be modified.
         </Text>
       </VerticalStack>
     </Banner>
@@ -179,13 +188,6 @@ export default function HomePage() {
         </Text>
       </VerticalStack>
     </Banner>
-  );
-
-  const handleModalClose = useCallback(() => setLoading(true), []); //forces modal open so user know page is still loading
-
-  const loadingModal = (
-    <Modal title="Loading (this might take a few minutes...)" open={loading} onClose={handleModalClose} loading={true} >
-    </Modal>
   );
     
   const handleOnApply = useCallback(
@@ -214,7 +216,15 @@ export default function HomePage() {
     [products],
   );
 
-  //////////////////////////// RETURN: DISPLAY PARSED DATA ////////////////////////////
+  //////////////////////////// FOR EVERYTHING ////////////////////////////
+
+  const handleModalClose = useCallback(() => setLoading(true), []); //forces modal open so user know page is still loading
+
+  const loadingModal = (
+    <Modal title="Loading (this might take a few minutes...)" open={loading} onClose={handleModalClose} loading={true} >
+    </Modal>
+  );
+
   if (displayTable) {
     return (
       <Page>

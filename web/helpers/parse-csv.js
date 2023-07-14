@@ -1,6 +1,8 @@
 import shopify from "../shopify.js";
 import Papa from "papaparse";
 
+////////////////////////  RETRIEVE PRODUCT AND METAFIELD DATA ////////////////////////
+
 //Returns all data for table: productTitle, productId, metafieldNamespace, metafieldKey, metafieldCurrentValue, metafieldNewValue
 //CSF file must have: productId, metafieldNamespace, metafieldKey, metafieldNewValue
 export async function getCsvJson(req, res) {
@@ -105,6 +107,8 @@ async function _getProductTitle(productId, res) {
     });
     return productData.body.data.product.title;
 }
+
+//////////////////////// APPLY METAFIELD CHANGES ////////////////////////
 
 export async function applyMetafieldChanges(req, res) {
     const results = await _startProcess(req, res);
