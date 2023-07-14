@@ -28,21 +28,43 @@ export async function getCsvJson(req, res) {
 
 async function _formatData(rawCsvData, res) {
     const formattedCsvData = [];
+    const errors = [];
     for (let i = 0; i < rawCsvData.length; i++) {
         let newRow = rawCsvData[i];
-        newRow["metafieldCurrentValue"] =  await _getMetafieldValue( //dont forget to put await to get VALUE of promise, not just promise object
-            rawCsvData[i].productId, 
-            rawCsvData[i].metafieldNamespace, 
-            rawCsvData[i].metafieldKey,
-            res
-        );
-        newRow["productTitle"] = await _getProductTitle(
-            rawCsvData[i].productId,
-            res
-        );
+
+        //Get product title
+        try {
+            newRow["productTitle"] = await _getProductTitle(
+                rawCsvData[i].productId,
+                res
+            );
+        } catch(error) {
+            newRow["productTitle"] = "NOT_FOUND";
+            errors.push({
+                index: i+1, 
+                message: 'Product not found. "Product ID" is probably written incorrectly. No changes will be made to this product.'
+            }); //Type 2 is product not found
+        }
+
+        //Get current metafield value
+        try {
+            newRow["metafieldCurrentValue"] =  await _getMetafieldValue( //dont forget to put await to get VALUE of promise, not just promise object
+                rawCsvData[i].productId, 
+                rawCsvData[i].metafieldNamespace, 
+                rawCsvData[i].metafieldKey,
+                res
+            );
+        } catch(error) {
+            newRow["metafieldCurrentValue"] = "NOT_FOUND";
+            errors.push({
+                index: i+1, 
+                message: 'Metafield not found. "Metafield Namespace", "Metafield Key" and/or "Product ID" are probably written incorrectly. No changes will be made to this product.'
+            }); //Type 1 is metafield not found
+        }
         formattedCsvData.push(newRow);
     };
-    return formattedCsvData;
+    const finalFormattedData = [errors, ...formattedCsvData];
+    return finalFormattedData;
 }
 
 async function _getMetafieldValue(productId, metafieldNamespace, metafieldKey, res) {

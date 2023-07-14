@@ -13,8 +13,9 @@ import {
   Divider,
   IndexTable,
   EmptySearchResult,
+  VerticalStack,
 } from "@shopify/polaris";
-import { TitleBar, useNavigate } from "@shopify/app-bridge-react";
+import { useNavigate } from "@shopify/app-bridge-react";
 import { createSearchParams } from "react-router-dom";
 import { useTranslation, Trans } from "react-i18next";
 import React from 'react';
@@ -33,6 +34,8 @@ export default function HomePage() {
   const navigate = useNavigate();
   const [displayTable, setDisplayTable] = useState(false);
   const [products, setProducts] = useState([]);
+  const [errors, setErrors] = useState([]);
+  const hasDataErrors = errors.length > 0;
 
   //////////////////////////// FUNCTIONS: DROP ZONE & PARSE FILE ////////////////////////////
 
@@ -70,7 +73,8 @@ export default function HomePage() {
         console.log("Success!");
         //console.log(response.json());
         let metafieldTableValues = await response.json();
-        await setProducts(metafieldTableValues);
+        await setProducts(metafieldTableValues.slice(1));
+        await setErrors(metafieldTableValues[0]);
         setDisplayTable(true);
         console.log(metafieldTableValues);
       } else {
@@ -111,33 +115,6 @@ export default function HomePage() {
 
   //////////////////////////// FUNCTIONS: DISPLAY PARSED DATA ////////////////////////////
 
-  /*const products = [
-    {
-        row: "1",
-        product: "Coffee mug",
-        productid: 123453,
-        metafield: "material",
-        prevMetafieldValue: "N/A",
-        newMetafieldValue: "rubber",
-    },
-    {
-        row: "2",
-        product: "Snowboard",
-        productid: 183632,
-        metafield: "material",
-        prevMetafieldValue: "N/A",
-        newMetafieldValue: "wood",
-    },
-    {
-        row: "3",
-        product: "Pen",
-        productid: 123453,
-        metafield: "material",
-        prevMetafieldValue: "N/A",
-        newMetafieldValue: "metal",
-    }
-  ];*/
-
   const resourceName = {
       singular: 'Product',
       plural: 'Products',
@@ -171,29 +148,61 @@ export default function HomePage() {
       </IndexTable.Row>
     ),
   );
+
+  const issuesMessage = hasDataErrors && (
+    <Banner title="The following issues were found:" status="critical">
+      <VerticalStack gap="1">
+        <List spacing="extraTight">
+          {errors.map((err) => (
+            <List.Item>Item {err["index"]}: {err["message"]}</List.Item>
+          ))}
+        </List>
+        <Text variant="headingSm" as="h6" fontWeight="regular">
+          Edit your CSV with the correct values and re-upload to fix these issues.
+        </Text>
+      </VerticalStack>
+    </Banner>
+  );
   
   //////////////////////////// RETURN: DISPLAY PARSED DATA ////////////////////////////
   if (displayTable) {
     return (
       <Page>
-        <TitleBar title={t("HomePage.title")} />
-          <LegacyCard>
-            <IndexTable resourceName={resourceName} 
-            itemCount={products.length} 
-            emptyState={emptyStateMarkup}
-            headings={[
-                {title: 'Item'},
-                {title: 'Product'},
-                {title: 'Product ID'},
-                {title: 'Metafield Namespace'},
-                {title: 'Metafield Key'},
-                {title: 'Current Value'},
-                {title: 'New Value'},
-            ]}
-            selectable={false}
-            >
-                {rowMarkup}
-            </IndexTable>
+          <LegacyCard sectioned={false} >
+            <LegacyCard.Section>
+              <VerticalStack gap="2">
+                <Text variant="heading3xl" as="h2">
+                  Review Changes
+                </Text>
+                <Text variant="headingMd" as="h6" fontWeight="regular">
+                  Review the contents of the table to ensure all information is correct. If satisfied, click "Apply Changes" to apply the new metafield values.
+                </Text>
+                {issuesMessage}
+              </VerticalStack>
+            </LegacyCard.Section>
+            <LegacyCard.Section>
+              <IndexTable resourceName={resourceName} 
+              itemCount={products.length} 
+              emptyState={emptyStateMarkup}
+              headings={[
+                  {title: 'Item'},
+                  {title: 'Product'},
+                  {title: 'Product ID'},
+                  {title: 'Metafield Namespace'},
+                  {title: 'Metafield Key'},
+                  {title: 'Current Value'},
+                  {title: 'New Value'},
+              ]}
+              selectable={false}
+              >
+                  {rowMarkup}
+              </IndexTable>
+            </LegacyCard.Section>
+            <LegacyCard.Section>
+            <div style={{ width: '200px' }}>
+                  <Button primary fullWidth={false} size={"medium"}>Apply Changes</Button>
+                </div>
+            </LegacyCard.Section>
           </LegacyCard>
       </Page>
     );
@@ -201,7 +210,6 @@ export default function HomePage() {
   //////////////////////////// RETURN: DISPLAY DROP ZONE ////////////////////////////
     return (
       <Page narrowWidth>
-        <TitleBar title={t("HomePage.title")} />
         <Layout>
           <Layout.Section>
             {errorMessage}
