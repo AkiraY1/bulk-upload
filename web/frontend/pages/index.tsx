@@ -37,6 +37,8 @@ export default function HomePage() {
   const [errors, setErrors] = useState([]);
   const hasDataErrors = errors.length > 0;
   const [loading, setLoading] = useState(false);
+  const [successfulNum, setSuccessfulNum] = useState(0);
+  const [done, setDone] = useState(false);
 
   //////////////////////////// FUNCTIONS: DROP ZONE & PARSE FILE ////////////////////////////
 
@@ -79,8 +81,10 @@ export default function HomePage() {
         await setErrors(metafieldTableValues[0]);
         setDisplayTable(true);
         console.log(metafieldTableValues);
+        setLoading(false);
       } else {
         console.log("Failure!");
+        setLoading(false);
       }
     },
     [file],
@@ -166,13 +170,50 @@ export default function HomePage() {
     </Banner>
   );
 
+  const successMessage = done && (
+    <Banner title="Success!" status="success">
+      <VerticalStack gap="1">
+        <Text variant="headingSm" as="h6" fontWeight="regular">
+          A total of {successfulNum} products' metafields were modified.
+          You can now refresh to return to the main page.
+        </Text>
+      </VerticalStack>
+    </Banner>
+  );
+
   const handleModalClose = useCallback(() => setLoading(true), []); //forces modal open so user know page is still loading
 
   const loadingModal = (
     <Modal title="Loading (this might take a few minutes...)" open={loading} onClose={handleModalClose} loading={true} >
     </Modal>
   );
-  
+    
+  const handleOnApply = useCallback(
+    async () => {
+      setLoading(true);
+      console.log(products);
+      const response = await fetch(
+        "/api/setMetafield",
+        {
+          method: "POST",
+          body: JSON.stringify({"products": products}),
+          headers: { "Content-Type": "application/json" }
+        }
+      );
+      if (response.ok) {
+        console.log("Metafield Changes Successful!");
+        const parsableResponse = await response.json();
+        await setSuccessfulNum(parsableResponse.successNum);
+        await setDone(true);
+        setLoading(false);
+      } else {
+        console.log("Metafield Changes Failed!");
+        setLoading(false);
+      }
+    },
+    [products],
+  );
+
   //////////////////////////// RETURN: DISPLAY PARSED DATA ////////////////////////////
   if (displayTable) {
     return (
@@ -187,6 +228,7 @@ export default function HomePage() {
                   Review the contents of the table to ensure all information is correct. If satisfied, click "Apply Changes" to apply the new metafield values.
                 </Text>
                 {issuesMessage}
+                {successMessage}
               </VerticalStack>
             </LegacyCard.Section>
             <LegacyCard.Section>
@@ -209,10 +251,11 @@ export default function HomePage() {
             </LegacyCard.Section>
             <LegacyCard.Section>
             <div style={{ width: '200px' }}>
-                  <Button primary fullWidth={false} size={"medium"}>Apply Changes</Button>
+                  <Button primary fullWidth={false} size={"medium"} onClick={handleOnApply}>Apply Changes</Button>
                 </div>
             </LegacyCard.Section>
           </LegacyCard>
+          {loadingModal}
       </Page>
     );
   } else {

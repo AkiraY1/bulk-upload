@@ -105,3 +105,63 @@ async function _getProductTitle(productId, res) {
     });
     return productData.body.data.product.title;
 }
+
+export async function applyMetafieldChanges(req, res) {
+    const results = await _startProcess(req, res);
+    return results;
+}
+
+async function _startProcess(req, res) {
+    console.log(req.body);
+    let successCount = 0;
+    for (let i = 0; i < req.body.products.length; i++) {
+        if (req.body["products"][i].productTitle != "NOT_FOUND" && req.body["products"][i].metafieldCurrentValue != "NOT_FOUND") {
+            let newVars = {
+                "metafields": [
+                    {
+                        "key": req.body["products"][i].metafieldKey,
+                        "namespace": req.body["products"][i].metafieldNamespace,
+                        "ownerId": `gid://shopify/Product/${req.body["products"][i].productId}`,
+                        "type": "single_line_text_field", //Might change later
+                        "value": req.body["products"][i].metafieldNewValue
+                    }
+                ]
+            };
+            try {
+                let resp = await _setMetafieldValue(newVars, res);
+                console.log("Success changing metafield");
+                successCount++;
+            } catch(error) {
+                console.log("Error tryng to change metafield");
+            }
+        }
+        console.log(successCount);
+    };
+    return successCount;
+}
+
+async function _setMetafieldValue(vars, res) {
+    const client = new shopify.api.clients.Graphql({session: res.locals.shopify.session, });
+    const response = await client.query({
+        data: {
+            query: `mutation MetafieldsSet($metafields: [MetafieldsSetInput!]!) {
+                metafieldsSet(metafields: $metafields) {
+                    metafields {
+                        key
+                        namespace
+                        value
+                        createdAt
+                        updatedAt
+                    }
+                    userErrors {
+                        field
+                        message
+                        code
+                    }
+                }
+            }`,
+            variables: vars
+        }
+    });
+    return response;
+}
